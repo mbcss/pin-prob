@@ -145,7 +145,7 @@
 <div class="container">
     <div class="widget-card">
         <div class="widget-header">
-            <h1>📍 Выберите пункт выдачи</h1>
+            <h1>📍 Выберите пункт выдачи для получения пробных пинов </h1>
             <p>Нажмите на метку на карте, чтобы выбрать удобный ПВЗ</p>
         </div>
         <div class="widget-body">
@@ -229,7 +229,7 @@
         
         iframe.src = formUrl;
         iframe.setAttribute('frameborder', '0');
-        iframe.style.height = '650px';
+        iframe.style.height = '700px';
         iframe.style.width = '100%';
         
         container.appendChild(iframe);
@@ -238,7 +238,7 @@
         iframe.addEventListener('load', function() {
             setTimeout(() => {
                 try {
-                    iframe.style.height = '700px';
+                    iframe.style.height = '750px';
                 } catch(e) {}
             }, 500);
         });
