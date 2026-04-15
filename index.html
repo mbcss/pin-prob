@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Выбор ПВЗ и оформление заказа</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9edf2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Карточка виджета */
+        .widget-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .widget-header {
+            background: #1a2c3e;
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+
+        .widget-header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .widget-header p {
+            opacity: 0.85;
+            font-size: 15px;
+        }
+
+        .widget-body {
+            padding: 25px;
+        }
+
+        /* Карточка формы */
+        .form-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .form-header {
+            background: #1a2c3e;
+            color: white;
+            padding: 20px 30px;
+        }
+
+        .form-header h2 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+
+        .form-header p {
+            font-size: 14px;
+            opacity: 0.85;
+            margin-top: 5px;
+        }
+
+        .form-body {
+            padding: 30px;
+        }
+
+        .info-row {
+            background: #f0f4fa;
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .info-row span:first-child {
+            font-weight: 600;
+            color: #1a2c3e;
+        }
+
+        .info-row span:last-child {
+            color: #2c5f8a;
+            word-break: break-all;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a2c3e;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            padding: 14px 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 16px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #1a2c3e;
+            box-shadow: 0 0 0 3px rgba(26, 44, 62, 0.1);
+        }
+
+        /* Стили для Яндекс Формы (iframe) */
+        .yandex-form-container {
+            margin-top: 20px;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .yandex-form-container iframe {
+            width: 100%;
+            border: none;
+            transition: height 0.3s ease;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #1a2c3e;
+            color: white;
+            border: none;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+            font-family: inherit;
+        }
+
+        .submit-btn:hover {
+            background: #0f1e2c;
+            transform: scale(0.98);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #7c7f8b;
+            font-size: 13px;
+        }
+
+        /* Состояние загрузки */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #1a2c3e;
+        }
+
+        @media (max-width: 768px) {
+            .widget-body {
+                padding: 15px;
+            }
+            .form-body {
+                padding: 20px;
+            }
+            .widget-header h1 {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Блок с виджетом карты -->
+    <div class="widget-card">
+        <div class="widget-header">
+            <h1>📍 Выберите пункт выдачи</h1>
+            <p>Нажмите на метку на карте, чтобы выбрать удобный ПВЗ</p>
+        </div>
+        <div class="widget-body">
+            <div id="delivery-widget"></div>
+        </div>
+    </div>
+
+    <!-- Блок с формой заказа (изначально скрыт) -->
+    <div class="form-card" id="order-form-block" style="display: none;">
+        <div class="form-header">
+            <h2>📋 Оформление заказа</h2>
+            <p>Заполните контактные данные для получения заказа</p>
+        </div>
+        <div class="form-body">
+            <!-- Отображаем выбранный адрес -->
+            <div class="info-row" id="addressInfo">
+                <span>📍 Выбранный ПВЗ:</span>
+                <span id="selectedAddressDisplay"></span>
+            </div>
+
+            <!-- 
+                ⚠️ ВНИМАНИЕ: ЗДЕСЬ БУДЕТ ЯНДЕКС ФОРМА
+                После создания формы в Яндекс.Формы, вставьте сюда код для вставки.
+                Инструкция по получению кода ниже в разделе "Настройка Яндекс Формы"
+            -->
+            <div id="yandexFormContainer" class="yandex-form-container">
+                <div class="loading">
+                    Загрузка формы...
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        Нажимая «Отправить заявку», вы соглашаетесь с обработкой персональных данных
+    </div>
+</div>
+
+<!-- Подключаем виджет Яндекс.Доставки -->
+<script async src="https://ndd-widget.landpro.site/widget.js"></script>
+
+<script>
+    // ========== НАСТРОЙКИ (ЗАПОЛНИТЕ ЭТОТ БЛОК) ==========
+    // Ссылка на вашу форму в Яндекс.Формы (вставьте после создания формы)
+    // Пример: https://forms.yandex.ru/u/65a1b2c3d4e5f67890g12345/
+    const YANDEX_FORM_URL = 'https://forms.yandex.ru/YOUR_FORM_ID/';
+    
+    // ========== ИНИЦИАЛИЗАЦИЯ ВИДЖЕТА ==========
+    (function(w) {
+        function startWidget() {
+            w.YaDelivery.createWidget({
+                containerId: 'delivery-widget',
+                params: {
+                    city: "Москва",
+                    size: {
+                        "height": "450px",
+                        "width": "100%"
+                    },
+                    source_platform_station: "019d3de27dbe7528b7854111b06a0fd4",
+                    physical_dims_weight_gross: 100,
+                    delivery_price: "от 0 р.",
+                    delivery_term: "от 1 дня",
+                    show_select_button: true,
+                    filter: {
+                        type: ["pickup_point", "terminal"],
+                        is_yandex_branded: false,
+                        payment_methods: ["already_paid", "card_on_receipt"],
+                        payment_methods_filter: "or"
+                    }
+                },
+            });
+        }
+        w.YaDelivery
+            ? startWidget()
+            : document.addEventListener('YaNddWidgetLoad', startWidget);
+    })(window);
+
+    // ========== ФУНКЦИЯ ЗАГРУЗКИ ЯНДЕКС ФОРМЫ ==========
+    function loadYandexForm() {
+        const container = document.getElementById('yandexFormContainer');
+        if (!container) return;
+        
+        // Очищаем контейнер
+        container.innerHTML = '';
+        
+        // Создаем iframe для Яндекс Формы
+        const iframe = document.createElement('iframe');
+        
+        // Яндекс Форма с передачей параметров через URL
+        // Добавляем параметр с адресом ПВЗ в URL формы (если нужно предзаполнить поле)
+        const selectedAddress = document.getElementById('selectedAddressDisplay').innerText;
+        let formUrl = YANDEX_FORM_URL;
+        
+        // Если хотите предзаполнить поле с адресом в форме Яндекс
+        // Нужно добавить параметр с именем вашего поля. Например: ?field_адрес=значение
+        // Подробнее: https://yandex.ru/support/forms/editor/prefill.html
+        if (selectedAddress && selectedAddress !== '') {
+            // Замените 'address_field' на реальный ID поля в Яндекс.Форме
+            formUrl += `?address_field=${encodeURIComponent(selectedAddress)}`;
+        }
+        
+        iframe.src = formUrl;
+        iframe.setAttribute('frameborder', '0');
+        iframe.setAttribute('scrolling', 'no');
+        iframe.style.height = '600px';
+        
+        // Автоматическая подстройка высоты iframe
+        iframe.addEventListener('load', function() {
+            // Отправляем сообщение для Яндекс.Формы о необходимости подстроить высоту
+            iframe.contentWindow.postMessage({
+                type: 'setHeight',
+                height: 800
+            }, '*');
+        });
+        
+        container.appendChild(iframe);
+        
+        // Слушаем сообщения от Яндекс Формы об изменении высоты
+        window.addEventListener('message', function(event) {
+            if (event.origin !== 'https://forms.yandex.ru') return;
+            if (event.data.type === 'setHeight' && event.data.height) {
+                iframe.style.height = event.data.height + 'px';
+            }
+        });
+    }
+    
+    // ========== ОБРАБОТКА ВЫБОРА ПВЗ ==========
+    let selectedPickupAddress = '';
+    
+    function setAddressDisplay(address) {
+        const displaySpan = document.getElementById('selectedAddressDisplay');
+        const infoRow = document.getElementById('addressInfo');
+        
+        if (displaySpan && infoRow) {
+            displaySpan.textContent = address;
+            infoRow.style.display = 'flex';
+        }
+        selectedPickupAddress = address;
+    }
+
+    function scrollToForm() {
+        const formBlock = document.getElementById('order-form-block');
+        if (formBlock) {
+            formBlock.style.display = 'block';
+            formBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Подсветка формы
+            formBlock.style.transition = 'box-shadow 0.3s';
+            formBlock.style.boxShadow = '0 0 0 3px #1a2c3e, 0 20px 35px -10px rgba(0,0,0,0.15)';
+            setTimeout(function() {
+                formBlock.style.boxShadow = '';
+            }, 1500);
+            
+            // Загружаем Яндекс Форму (если ещё не загружена)
+            if (document.getElementById('yandexFormContainer').children.length === 0 || 
+                document.getElementById('yandexFormContainer').children[0]?.tagName !== 'IFRAME') {
+                loadYandexForm();
+            }
+            
+            return true;
+        }
+        return false;
+    }
+
+    // Обработка выбора ПВЗ от виджета
+    document.addEventListener('YaNddWidgetPointSelected', function (data) {
+        if (data.detail && data.detail.address && data.detail.address.full_address) {
+            const fullAddress = data.detail.address.full_address;
+            console.log('✅ ВЫБРАН ПВЗ:', fullAddress);
+            setAddressDisplay(fullAddress);
+            
+            setTimeout(function() {
+                scrollToForm();
+            }, 300);
+        }
+    });
+</script>
+</body>
+</html>
