@@ -406,9 +406,6 @@
 <script async src="https://ndd-widget.landpro.site/widget.js"></script>
 
 <script>
-    // ========== ⚠️ ВСТАВЬТЕ ВАШ URL ИЗ GOOGLE APPS SCRIPT ==========
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzgTx_-ci6c6mCmTL4wlJZddSlxXYVuwHx8wr1fLi_OAX81EDVJqArjRrjXKMET8qCsDw/exec';  // ЗАМЕНИТЕ!
-    
     // ========== ПОЛУЧЕНИЕ IP-АДРЕСА ==========
     let userIP = 'Не определен';
     
@@ -424,7 +421,6 @@
         }
     }
     
-    // Запускаем получение IP при загрузке страницы
     getUserIP();
     
     // ========== МАСКА ТЕЛЕФОНА ==========
@@ -533,16 +529,16 @@
         }, 5000);
     }
     
-    // ========== ОТПРАВКА В GOOGLE ТАБЛИЦУ (с IP) ==========
+    // ========== ОТПРАВКА НА ПОЧТУ ЧЕРЕЗ BEGET ==========
     async function sendToEmail(fio, phone, email, address, ip) {
-    const response = await fetch('https://j925910l.beget.com/sendmail.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fio, phone, email, address, ip })
-    });
-    const result = await response.json();
-    return result.success === true;
-	}
+        const response = await fetch('https://j925910l.beget.com/sendmail.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fio, phone, email, address, ip })
+        });
+        const result = await response.json();
+        return result.success === true;
+    }
     
     // ========== ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ ==========
     form.addEventListener('submit', async function(e) {
@@ -592,10 +588,10 @@
         submitBtn.textContent = 'Отправка...';
         
         try {
-            const success = await sendToGoogleSheets(fio, phone, email, selectedAddress, userIP);
+            const success = await sendToEmail(fio, phone, email, selectedAddress, userIP);
             
             if (success) {
-                setSubmitted(); // Сохраняем в localStorage, что заявка отправлена
+                setSubmitted();
                 showMessage('✅ Спасибо! Заявка отправлена. Мы свяжемся с вами в ближайшее время.');
                 form.reset();
                 if (phoneMask) phoneMask.updateValue();
