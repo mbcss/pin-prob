@@ -534,25 +534,15 @@
     }
     
     // ========== ОТПРАВКА В GOOGLE ТАБЛИЦУ (с IP) ==========
-    async function sendToGoogleSheets(fio, phone, email, address, ip) {
-    const data = {
-        fio: fio,
-        phone: phone,
-        email: email,
-        address: address,
-        ip: ip,
-        timestamp: new Date().toLocaleString('ru-RU')
-    };
-    
-    const url = GOOGLE_SCRIPT_URL + '?data=' + encodeURIComponent(JSON.stringify(data));
-    
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
+    async function sendToEmail(fio, phone, email, address, ip) {
+    const response = await fetch('https://j925910l.beget.com/sendmail.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fio, phone, email, address, ip })
     });
     const result = await response.json();
     return result.success === true;
-    }
+	}
     
     // ========== ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ ==========
     form.addEventListener('submit', async function(e) {
