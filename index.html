@@ -2,10 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <title>Выбор ПВЗ и оформление заказа</title>
-    <!-- Подключаем библиотеку для маски телефона -->
-    <script src="https://cdn.jsdelivr.net/npm/imask"></script>
     <style>
         * {
             margin: 0;
@@ -39,6 +37,7 @@
             margin: 0 auto;
             position: relative;
             z-index: 1;
+            overflow-x: hidden;
         }
 
         .widget-card {
@@ -74,6 +73,20 @@
 
         .widget-body {
             padding: 25px;
+            overflow-x: hidden;
+        }
+
+        /* ========== ФИКС ДЛЯ ВИДЖЕТА ========== */
+        #delivery-widget {
+            width: 100%;
+            min-height: 450px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #delivery-widget > * {
+            max-width: 100% !important;
+            width: 100% !important;
         }
 
         .form-card {
@@ -152,6 +165,7 @@
             font-size: 16px;
             transition: all 0.2s;
             font-family: inherit;
+            width: 100%;
         }
 
         .input-group input:focus {
@@ -174,6 +188,7 @@
             margin-top: 2px;
             cursor: pointer;
             accent-color: #667eea;
+            flex-shrink: 0;
         }
 
         .checkbox-group label {
@@ -186,10 +201,6 @@
         .checkbox-group a {
             color: #667eea;
             text-decoration: none;
-        }
-
-        .checkbox-group a:hover {
-            text-decoration: underline;
         }
 
         .submit-btn {
@@ -319,18 +330,68 @@
             animation: fadeInUp 0.6s ease;
         }
 
+        /* ========== МОБИЛЬНАЯ ВЕРСИЯ ========== */
         @media (max-width: 768px) {
-            .widget-body {
-                padding: 15px;
+            body {
+                padding: 12px;
             }
+            
+            .widget-body {
+                padding: 12px;
+            }
+            
             .form-body {
                 padding: 20px;
             }
+            
             .widget-header h1 {
-                font-size: 24px;
+                font-size: 22px;
             }
+            
+            .widget-header h1:first-child {
+                font-size: 20px;
+            }
+            
             .action-buttons {
                 padding: 20px;
+            }
+            
+            .action-btn {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+            
+            .info-row {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+            
+            #delivery-widget {
+                min-height: 380px;
+            }
+        }
+        
+        /* Для очень маленьких экранов */
+        @media (max-width: 480px) {
+            .widget-header {
+                padding: 20px;
+            }
+            
+            .widget-header h1 {
+                font-size: 18px;
+            }
+            
+            .form-header {
+                padding: 20px;
+            }
+            
+            .form-header h2 {
+                font-size: 20px;
+            }
+            
+            .submit-btn {
+                padding: 14px;
+                font-size: 16px;
             }
         }
     </style>
@@ -367,7 +428,7 @@
 
                 <div class="input-group">
                     <label for="phone">Телефон *</label>
-                    <input type="tel" id="phone" name="Телефон" placeholder="+7 (___) ___-__-__" required>
+                    <input type="tel" id="phone" name="Телефон" placeholder="+7 (999) 123-45-67" required>
                 </div>
 
                 <div class="input-group">
@@ -412,6 +473,37 @@
     const TELEGRAM_BOT_TOKEN = '8552202930:AAEmYfkHIjCGUrRvdMbZ5wgzvsVdbHwmQoQ';
     const TELEGRAM_CHAT_ID = '71286277';
     
+    // ========== ФИКС ДЛЯ МОБИЛЬНОЙ ВЕРСИИ (ОБНОВЛЕНИЕ ВЫСОТЫ ВИДЖЕТА) ==========
+    function fixMobileWidgetHeight() {
+        const widgetContainer = document.getElementById('delivery-widget');
+        if (widgetContainer) {
+            // Принудительно пересчитываем высоту
+            const currentHeight = widgetContainer.scrollHeight;
+            if (currentHeight > 0) {
+                widgetContainer.style.minHeight = currentHeight + 'px';
+                setTimeout(() => {
+                    widgetContainer.style.minHeight = '';
+                }, 200);
+            }
+        }
+    }
+    
+    // Запускаем фикс после загрузки
+    window.addEventListener('load', function() {
+        setTimeout(fixMobileWidgetHeight, 100);
+        setTimeout(fixMobileWidgetHeight, 500);
+    });
+    
+    window.addEventListener('resize', function() {
+        setTimeout(fixMobileWidgetHeight, 50);
+    });
+    
+    // Когда виджет Яндекса загрузится
+    document.addEventListener('YaNddWidgetLoad', function() {
+        setTimeout(fixMobileWidgetHeight, 200);
+        setTimeout(fixMobileWidgetHeight, 1000);
+    });
+    
     // ========== ИНИЦИАЛИЗАЦИЯ ВИДЖЕТА КАРТЫ ==========
     (function(w) {
         function startWidget() {
@@ -441,14 +533,6 @@
             ? startWidget()
             : document.addEventListener('YaNddWidgetLoad', startWidget);
     })(window);
-    
-    // ========== НАСТРОЙКА МАСКИ ТЕЛЕФОНА ==========
-    const phoneInput = document.getElementById('phone');
-    const phoneMask = IMask(phoneInput, {
-        mask: '+{7} (000) 000-00-00',
-        lazy: false,  // Маска показывается сразу при фокусе
-        placeholderChar: '_'
-    });
     
     // ========== ОБРАБОТКА ВЫБОРА ПВЗ ==========
     let selectedAddress = '';
@@ -514,13 +598,10 @@
     }
     
     async function sendToTelegram(fio, phone, email, address) {
-        // Убираем маску, оставляем только цифры для красивого отображения в уведомлении
-        const cleanPhone = phone.replace(/[^\d+]/g, '');
-        
         const message = `📦 *НОВАЯ ЗАЯВКА С САЙТА!*
         
 👤 *ФИО:* ${fio}
-📞 *Телефон:* ${cleanPhone}
+📞 *Телефон:* ${phone}
 ✉️ *Email:* ${email}
 📍 *ПВЗ:* ${address}
 🕐 *Время:* ${new Date().toLocaleString('ru-RU')}`;
@@ -546,7 +627,7 @@
         e.preventDefault();
         
         const fio = document.getElementById('fio').value.trim();
-        const phone = phoneInput.value.trim();
+        const phone = document.getElementById('phone').value.trim();
         const email = document.getElementById('email').value.trim();
         
         if (!fio || !phone || !email) {
@@ -573,7 +654,6 @@
             if (success) {
                 showMessage('✅ Спасибо! Заявка отправлена. Мы свяжемся с вами в ближайшее время.');
                 form.reset();
-                phoneMask.updateValue();    // Сбрасываем маску телефона
                 consentCheckbox.checked = false;
                 submitBtn.disabled = true;
             } else {
@@ -590,7 +670,6 @@
     });
     
     // Временная заглушка для политики
-    document.getElementById('privacyLink').href = '#';
     document.getElementById('privacyLink').addEventListener('click', function(e) {
         e.preventDefault();
         alert('Я даю согласие на обработку моих персональных данных (ФИО, телефон, email, адрес ПВЗ) для целей оформления и доставки заказа. Данные передаются через Telegram API и не хранятся на сервере сайта.');
