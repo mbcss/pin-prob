@@ -387,7 +387,7 @@
             </form>
 
             <div class="action-buttons">
-                <h3>✨ Остались вопросы? Свяжитесь с нами ✨</h3>
+                <h3> Остались вопросы? Свяжитесь с нами </h3>
                 <div class="buttons-group">
                     <a href="https://t.me/stom_tochka" target="_blank" class="action-btn telegram">
                         📱 Написать в Telegram
@@ -408,6 +408,9 @@
 
 <script>
     // ========== НАСТРОЙКИ ==========
+    const EMAIL_TO = 'stom-tochka@mail.ru';
+    
+    // Telegram пытаемся отправить, но если не получится — не страшно, почта сработает
     const TELEGRAM_BOT_TOKEN = '8552202930:AAEmYfkHIjCGUrRvdMbZ5wgzvsVdbHwmQoQ';
     const TELEGRAM_CHAT_ID = '71286277';
     
@@ -523,7 +526,6 @@
     const form = document.getElementById('orderForm');
     const statusMessage = document.getElementById('statusMessage');
     
-    // Если пользователь уже отправлял форму — блокируем
     if (hasUserSubmittedBefore()) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Вы уже отправляли заявку';
@@ -544,6 +546,25 @@
         }, 5000);
     }
     
+    // ========== ОТПРАВКА НА ПОЧТУ (основной канал) ==========
+    async function sendToEmail(fio, phone, email, address) {
+        const formData = new FormData();
+        formData.append('name', fio);
+        formData.append('phone', phone);
+        formData.append('email', email);
+        formData.append('address', address);
+        formData.append('_subject', '📦 НОВАЯ ЗАЯВКА С САЙТА ПВЗ');
+        formData.append('_to', EMAIL_TO);
+        formData.append('_captcha', 'false');
+        
+        const response = await fetch('https://formsubmit.co/ajax/stom-tochka@mail.ru', {
+            method: 'POST',
+            body: formData
+        });
+        return response.ok;
+    }
+    
+    // ========== ОТПРАВКА В TELEGRAM (дополнительный канал) ==========
     async function sendToTelegram(fio, phone, email, address) {
         const message = `📦 *НОВАЯ ЗАЯВКА С САЙТА!*
         
@@ -555,41 +576,32 @@
         
         const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
         
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    chat_id: TELEGRAM_CHAT_ID,
-                    text: message,
-                    parse_mode: 'Markdown'
-                })
-            });
-            
-            return response.ok;
-        } catch (error) {
-            console.error('Ошибка отправки в Telegram:', error);
-            return false;
-        }
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        });
+        return response.ok;
     }
     
+    // ========== ОСНОВНАЯ ФУНКЦИЯ ==========
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Проверка на повторную отправку
         if (hasUserSubmittedBefore()) {
             showMessage('❌ Вы уже отправляли заявку. Повторная отправка невозможна.', true);
             return;
         }
         
-        // Проверка таймаута
         const lastTime = getLastSubmitTime();
         const now = Date.now();
         if (lastTime && (now - lastTime) < SUBMIT_COOLDOWN) {
             const secondsLeft = Math.ceil((SUBMIT_COOLDOWN - (now - lastTime)) / 1000);
-            showMessage(`❌ Пожалуйста, подождите ${secondsLeft} секунд перед повторной отправкой.`, true);
+            showMessage(`❌ Пожалуйста, подождите ${secondsLeft} секунд.`, true);
             return;
         }
         
@@ -602,7 +614,6 @@
             return;
         }
         
-        // Проверка, что телефон введён полностью (маска не должна содержать символы _)
         if (phone.includes('_')) {
             showMessage('❌ Пожалуйста, введите номер телефона полностью!', true);
             return;
@@ -614,42 +625,45 @@
         }
         
         if (!consentCheckbox.checked) {
-            showMessage('❌ Пожалуйста, дайте согласие на обработку персональных данных!', true);
+            showMessage('❌ Дайте согласие на обработку данных.', true);
             return;
         }
         
         submitBtn.disabled = true;
         submitBtn.textContent = 'Отправка...';
         
+        // Отправляем на почту (гарантированно работает)
+        const emailSuccess = await sendToEmail(fio, phone, email, selectedAddress);
+        
+        // Пробуем отправить в Telegram (может не работать на некоторых компьютерах)
+        let telegramSuccess = false;
         try {
-            const success = await sendToTelegram(fio, phone, email, selectedAddress);
-            
-            if (success) {
-                setSubmitted();
-                showMessage('✅ Спасибо! Заявка отправлена. Мы свяжемся с вами в ближайшее время.');
-                form.reset();
-                // Очищаем маску телефона
-                if (phoneMask) phoneMask.updateValue();
-                consentCheckbox.checked = false;
-                submitBtn.disabled = true;
-                submitBtn.textContent = 'Заявка отправлена';
-            } else {
-                showMessage('❌ Ошибка отправки. Попробуйте позже.', true);
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Отправить заявку';
-            }
-        } catch (error) {
-            console.error('Ошибка:', error);
-            showMessage('❌ Ошибка соединения. Проверьте интернет.', true);
+            telegramSuccess = await sendToTelegram(fio, phone, email, selectedAddress);
+        } catch(e) {
+            console.log('Telegram не отправился, но это не страшно');
+        }
+        
+        if (emailSuccess) {
+            setSubmitted();
+            let msg = '✅ Спасибо! Заявка отправлена на почту. ';
+            if (telegramSuccess) msg += 'Уведомление также пришло в Telegram.';
+            else msg += 'Если не пришло письмо — проверьте папку Спам.';
+            showMessage(msg);
+            form.reset();
+            if (phoneMask) phoneMask.updateValue();
+            consentCheckbox.checked = false;
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Заявка отправлена';
+        } else {
+            showMessage('❌ Ошибка отправки. Попробуйте позже или свяжитесь с нами в Telegram.', true);
             submitBtn.disabled = false;
             submitBtn.textContent = 'Отправить заявку';
         }
     });
     
-    // Политика обработки данных
     document.getElementById('privacyLink').addEventListener('click', function(e) {
         e.preventDefault();
-        alert('Вы даете согласие на обработку моих персональных данных (Ф.И.О., телефон, email, адрес ПВЗ) для целей оформления и доставки заказа. Данные передаются через Telegram API и не хранятся на сервере сайта.');
+        alert('Вы даете согласие на обработку персональных данных (Ф.И.О., телефон, email, адрес ПВЗ) для оформления и доставки заказа.');
     });
 </script>
 </body>
