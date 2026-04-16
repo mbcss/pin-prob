@@ -45,13 +45,11 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             overflow: hidden;
             margin-bottom: 30px;
-            backdrop-filter: blur(2px);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.3s ease;
         }
 
         .widget-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 30px 55px -12px rgba(0, 0, 0, 0.3);
         }
 
         .widget-header {
@@ -65,7 +63,6 @@
             font-size: 32px;
             margin-bottom: 10px;
             font-weight: 700;
-            letter-spacing: -0.5px;
         }
 
         .widget-header p {
@@ -83,7 +80,6 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
             overflow: hidden;
             transition: all 0.4s ease;
-            backdrop-filter: blur(2px);
         }
 
         .form-header {
@@ -139,7 +135,6 @@
         .yandex-form-container iframe {
             width: 100%;
             border: none;
-            transition: height 0.3s ease;
         }
 
         .footer {
@@ -156,146 +151,6 @@
             color: #1a2c3e;
         }
 
-        /* МОДАЛЬНОЕ ОКНО */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 48px;
-            max-width: 500px;
-            width: 90%;
-            padding: 40px 35px;
-            text-align: center;
-            animation: slideUp 0.4s ease;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
-        }
-
-        .modal-icon {
-            font-size: 70px;
-            margin-bottom: 20px;
-        }
-
-        .modal-content h3 {
-            font-size: 28px;
-            color: #1a2c3e;
-            margin-bottom: 12px;
-            font-weight: 700;
-        }
-
-        .modal-content p {
-            color: #666;
-            margin-bottom: 25px;
-            line-height: 1.5;
-        }
-
-        .product-card {
-            background: linear-gradient(135deg, #f8f9fc 0%, #f0f2f8 100%);
-            border-radius: 24px;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: left;
-        }
-
-        .product-card h4 {
-            color: #1a2c3e;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
-
-        .product-card p {
-            color: #555;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 25px;
-        }
-
-        .modal-btn {
-            padding: 14px 28px;
-            border-radius: 60px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            border: none;
-            font-size: 14px;
-        }
-
-        .modal-btn.telegram {
-            background: #0088cc;
-            color: white;
-        }
-
-        .modal-btn.telegram:hover {
-            background: #006699;
-            transform: scale(1.02);
-        }
-
-        .modal-btn.shop {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .modal-btn.shop:hover {
-            transform: scale(1.02);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .modal-btn.close {
-            background: #eef2f7;
-            color: #4a5568;
-        }
-
-        .modal-btn.close:hover {
-            background: #e2e8f0;
-        }
-
-        .form-card {
-            animation: fadeInUp 0.6s ease;
-        }
-
         @keyframes fadeInUp {
             from {
                 opacity: 0;
@@ -305,6 +160,10 @@
                 opacity: 1;
                 transform: translateY(0);
             }
+        }
+
+        .form-card {
+            animation: fadeInUp 0.6s ease;
         }
 
         @media (max-width: 768px) {
@@ -317,15 +176,6 @@
             .widget-header h1 {
                 font-size: 24px;
             }
-            .modal-content {
-                padding: 30px 20px;
-            }
-            .modal-buttons {
-                flex-direction: column;
-            }
-            .modal-btn {
-                justify-content: center;
-            }
         }
     </style>
 </head>
@@ -335,7 +185,7 @@
     <div class="widget-card">
         <div class="widget-header">
             <h1>📍 Выберите пункт выдачи для получения бесплатных пробных пинов </h1>
-            <h1>📍 Доставка = 0 р. </h1>
+            <h1> Доставка = 0 р. </h1>
         </div>
         <div class="widget-body">
             <div id="delivery-widget"></div>
@@ -365,75 +215,12 @@
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО -->
-<div id="thankYouModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-icon">🎉</div>
-        <h3>Спасибо за заказ!</h3>
-        <p>Ваша заявка принята. Мы свяжемся с вами в ближайшее время.</p>
-        
-        <div class="product-card">
-            <h4>✨ Ваш подарок</h4>
-            <p>При заказе через наш сайт вы получаете промокод на скидку 10%</p>
-            <strong style="color:#667eea;">ПРОМОКОД: WELCOME10</strong>
-        </div>
-        
-        <div class="modal-buttons">
-            <a href="https://t.me/ваш_канал" target="_blank" class="modal-btn telegram">
-                📱 Перейти в Telegram
-            </a>
-            <a href="https://ваш-магазин.рф" target="_blank" class="modal-btn shop">
-                🛍️ Перейти в магазин
-            </a>
-            <button onclick="closeModal()" class="modal-btn close">
-                🔄 Продолжить
-            </button>
-        </div>
-    </div>
-</div>
-
 <script async src="https://ndd-widget.landpro.site/widget.js"></script>
 
 <script>
     // ========== ВАШИ ДАННЫЕ ==========
     const YANDEX_FORM_URL = 'https://forms.yandex.ru/u/69dfdfa4e010db47b08a5d5d/';
     const ADDRESS_FIELD_ID = 'answer_short_text_9008975534367130';
-    
-    // Замените на свои ссылки!
-    const TELEGRAM_LINK = 'https://t.me/ваш_канал';
-    const SHOP_LINK = 'https://ваш-магазин.рф';
-    
-    // Обновляем ссылки в модальном окне
-    document.querySelector('.modal-btn.telegram').href = TELEGRAM_LINK;
-    document.querySelector('.modal-btn.shop').href = SHOP_LINK;
-    
-    // ========== МОДАЛЬНОЕ ОКНО ==========
-    function showModal() {
-        const modal = document.getElementById('thankYouModal');
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        console.log('✅ Модальное окно открыто');
-    }
-    
-    function closeModal() {
-        const modal = document.getElementById('thankYouModal');
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-    
-    window.closeModal = closeModal;
-    
-    document.getElementById('thankYouModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            closeModal();
-        }
-    });
-    
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeModal();
-        }
-    });
     
     // ========== ИНИЦИАЛИЗАЦИЯ ВИДЖЕТА ==========
     (function(w) {
@@ -492,79 +279,7 @@
                     iframe.style.height = '700px';
                 } catch(e) {}
             }, 500);
-            
-            // ===== ЗАПУСКАЕМ ОТСЛЕЖИВАНИЕ ОТПРАВКИ ФОРМЫ =====
-            startWatchingFormSubmission(iframe);
         });
-    }
-    
-    // ========== ОТСЛЕЖИВАНИЕ ОТПРАВКИ ФОРМЫ ==========
-    let isWatching = false;
-    
-    function startWatchingFormSubmission(iframe) {
-        if (isWatching) return;
-        isWatching = true;
-        
-        console.log('🔍 Начинаем отслеживание отправки формы...');
-        
-        // Способ 1: Проверка URL каждые 2 секунды
-        let lastUrl = '';
-        const intervalId = setInterval(() => {
-            try {
-                if (iframe && iframe.contentWindow) {
-                    const currentUrl = iframe.contentWindow.location.href;
-                    if (currentUrl !== lastUrl) {
-                        lastUrl = currentUrl;
-                        console.log('📍 URL изменился:', currentUrl);
-                        
-                        // Проверяем признаки успешной отправки
-                        if (currentUrl.includes('/success') || 
-                            currentUrl.includes('success') ||
-                            currentUrl.includes('thank')) {
-                            console.log('🎉 Обнаружена успешная отправка формы!');
-                            clearInterval(intervalId);
-                            isWatching = false;
-                            setTimeout(() => showModal(), 500);
-                        }
-                    }
-                }
-            } catch(e) {
-                // CORS ошибка — игнорируем
-            }
-        }, 1000);
-        
-        // Способ 2: Слушаем сообщения от iframe
-        const messageHandler = function(event) {
-            if (event.origin !== 'https://forms.yandex.ru') return;
-            console.log('📨 Сообщение от Яндекс Формы:', event.data);
-            
-            if (event.data && (event.data.type === 'form-submit-success' || 
-                event.data.success ||
-                event.data === 'success')) {
-                console.log('🎉 Получено сообщение об успешной отправке!');
-                clearInterval(intervalId);
-                isWatching = false;
-                window.removeEventListener('message', messageHandler);
-                setTimeout(() => showModal(), 500);
-            }
-        };
-        window.addEventListener('message', messageHandler);
-        
-        // Способ 3: Запасной вариант — кнопка для ручного открытия (для тестирования)
-        // Добавляем скрытую кнопку, которая появится через 5 секунд если форма не отправилась
-        setTimeout(() => {
-            if (isWatching) {
-                console.log('⚠️ Форма долго не отправляется. Добавляем подсказку...');
-                const container = document.getElementById('yandexFormContainer');
-                if (container && !document.getElementById('manualHelper')) {
-                    const helper = document.createElement('div');
-                    helper.id = 'manualHelper';
-                    helper.style.cssText = 'text-align:center; margin-top:15px; padding:10px; background:#f0f4fa; border-radius:12px; font-size:13px; color:#666;';
-                    helper.innerHTML = '✅ После отправки формы здесь появится окно с подарком. Если не появилось — <a href="#" onclick="showModal(); return false;" style="color:#667eea;">нажмите сюда</a>.';
-                    container.appendChild(helper);
-                }
-            }
-        }, 10000);
     }
     
     // ========== ОБРАБОТКА ВЫБОРА ПВЗ ==========
