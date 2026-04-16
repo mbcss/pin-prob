@@ -19,7 +19,6 @@
             position: relative;
         }
 
-        /* Декоративные круги на фоне */
         body::before {
             content: '';
             position: fixed;
@@ -40,7 +39,6 @@
             z-index: 1;
         }
 
-        /* Карточка виджета */
         .widget-card {
             background: rgba(255, 255, 255, 0.98);
             border-radius: 32px;
@@ -79,7 +77,6 @@
             padding: 25px;
         }
 
-        /* Карточка формы */
         .form-card {
             background: rgba(255, 255, 255, 0.98);
             border-radius: 32px;
@@ -159,7 +156,7 @@
             color: #1a2c3e;
         }
 
-        /* ========== МОДАЛЬНОЕ ОКНО БЛАГОДАРНОСТИ ========== */
+        /* МОДАЛЬНОЕ ОКНО */
         .modal {
             display: none;
             position: fixed;
@@ -167,7 +164,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(8px);
             z-index: 1000;
             justify-content: center;
@@ -261,6 +258,9 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
         }
 
         .modal-btn.telegram {
@@ -292,7 +292,6 @@
             background: #e2e8f0;
         }
 
-        /* Анимация для формы при появлении */
         .form-card {
             animation: fadeInUp 0.6s ease;
         }
@@ -333,18 +332,16 @@
 <body>
 
 <div class="container">
-    <!-- Блок с виджетом карты -->
     <div class="widget-card">
         <div class="widget-header">
-            <h1>📍 Выберите пункт выдачи</h1>
-            <p>Нажмите на метку на карте, чтобы выбрать удобный ПВЗ</p>
+            <h1>📍 Выберите пункт выдачи для получения бесплатных пробных пинов </h1>
+            <h1>📍 Доставка = 0 р. </h1>
         </div>
         <div class="widget-body">
             <div id="delivery-widget"></div>
         </div>
     </div>
 
-    <!-- Блок с формой заказа (изначально скрыт) -->
     <div class="form-card" id="order-form-block" style="display: none;">
         <div class="form-header">
             <h2>📋 Оформление заказа</h2>
@@ -368,7 +365,7 @@
     </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО БЛАГОДАРНОСТИ -->
+<!-- МОДАЛЬНОЕ ОКНО -->
 <div id="thankYouModal" class="modal">
     <div class="modal-content">
         <div class="modal-icon">🎉</div>
@@ -402,11 +399,20 @@
     const YANDEX_FORM_URL = 'https://forms.yandex.ru/u/69dfdfa4e010db47b08a5d5d/';
     const ADDRESS_FIELD_ID = 'answer_short_text_9008975534367130';
     
+    // Замените на свои ссылки!
+    const TELEGRAM_LINK = 'https://t.me/ваш_канал';
+    const SHOP_LINK = 'https://ваш-магазин.рф';
+    
+    // Обновляем ссылки в модальном окне
+    document.querySelector('.modal-btn.telegram').href = TELEGRAM_LINK;
+    document.querySelector('.modal-btn.shop').href = SHOP_LINK;
+    
     // ========== МОДАЛЬНОЕ ОКНО ==========
     function showModal() {
         const modal = document.getElementById('thankYouModal');
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
+        console.log('✅ Модальное окно открыто');
     }
     
     function closeModal() {
@@ -415,14 +421,14 @@
         document.body.style.overflow = '';
     }
     
-    // Закрытие по клику на фон
+    window.closeModal = closeModal;
+    
     document.getElementById('thankYouModal').addEventListener('click', function(e) {
         if (e.target === this) {
             closeModal();
         }
     });
     
-    // Закрытие по Escape
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeModal();
@@ -486,7 +492,79 @@
                     iframe.style.height = '700px';
                 } catch(e) {}
             }, 500);
+            
+            // ===== ЗАПУСКАЕМ ОТСЛЕЖИВАНИЕ ОТПРАВКИ ФОРМЫ =====
+            startWatchingFormSubmission(iframe);
         });
+    }
+    
+    // ========== ОТСЛЕЖИВАНИЕ ОТПРАВКИ ФОРМЫ ==========
+    let isWatching = false;
+    
+    function startWatchingFormSubmission(iframe) {
+        if (isWatching) return;
+        isWatching = true;
+        
+        console.log('🔍 Начинаем отслеживание отправки формы...');
+        
+        // Способ 1: Проверка URL каждые 2 секунды
+        let lastUrl = '';
+        const intervalId = setInterval(() => {
+            try {
+                if (iframe && iframe.contentWindow) {
+                    const currentUrl = iframe.contentWindow.location.href;
+                    if (currentUrl !== lastUrl) {
+                        lastUrl = currentUrl;
+                        console.log('📍 URL изменился:', currentUrl);
+                        
+                        // Проверяем признаки успешной отправки
+                        if (currentUrl.includes('/success') || 
+                            currentUrl.includes('success') ||
+                            currentUrl.includes('thank')) {
+                            console.log('🎉 Обнаружена успешная отправка формы!');
+                            clearInterval(intervalId);
+                            isWatching = false;
+                            setTimeout(() => showModal(), 500);
+                        }
+                    }
+                }
+            } catch(e) {
+                // CORS ошибка — игнорируем
+            }
+        }, 1000);
+        
+        // Способ 2: Слушаем сообщения от iframe
+        const messageHandler = function(event) {
+            if (event.origin !== 'https://forms.yandex.ru') return;
+            console.log('📨 Сообщение от Яндекс Формы:', event.data);
+            
+            if (event.data && (event.data.type === 'form-submit-success' || 
+                event.data.success ||
+                event.data === 'success')) {
+                console.log('🎉 Получено сообщение об успешной отправке!');
+                clearInterval(intervalId);
+                isWatching = false;
+                window.removeEventListener('message', messageHandler);
+                setTimeout(() => showModal(), 500);
+            }
+        };
+        window.addEventListener('message', messageHandler);
+        
+        // Способ 3: Запасной вариант — кнопка для ручного открытия (для тестирования)
+        // Добавляем скрытую кнопку, которая появится через 5 секунд если форма не отправилась
+        setTimeout(() => {
+            if (isWatching) {
+                console.log('⚠️ Форма долго не отправляется. Добавляем подсказку...');
+                const container = document.getElementById('yandexFormContainer');
+                if (container && !document.getElementById('manualHelper')) {
+                    const helper = document.createElement('div');
+                    helper.id = 'manualHelper';
+                    helper.style.cssText = 'text-align:center; margin-top:15px; padding:10px; background:#f0f4fa; border-radius:12px; font-size:13px; color:#666;';
+                    helper.innerHTML = '✅ После отправки формы здесь появится окно с подарком. Если не появилось — <a href="#" onclick="showModal(); return false;" style="color:#667eea;">нажмите сюда</a>.';
+                    container.appendChild(helper);
+                }
+            }
+        }, 10000);
     }
     
     // ========== ОБРАБОТКА ВЫБОРА ПВЗ ==========
@@ -518,40 +596,6 @@
         }
         return false;
     }
-
-    // ========== СЛЕЖЕНИЕ ЗА ОТПРАВКОЙ ФОРМЫ ==========
-    // Отслеживаем изменения URL (когда Яндекс форма успешно отправлена)
-    let lastUrl = '';
-    
-    function checkFormSubmission() {
-        const iframe = document.querySelector('#yandexFormContainer iframe');
-        if (iframe && iframe.contentWindow) {
-            try {
-                const currentUrl = iframe.contentWindow.location.href;
-                if (currentUrl !== lastUrl && currentUrl.includes('/success')) {
-                    lastUrl = currentUrl;
-                    setTimeout(() => {
-                        showModal();
-                    }, 500);
-                }
-            } catch(e) {
-                // CORS ограничения — пробуем другой метод
-            }
-        }
-    }
-    
-    // Проверяем каждые 2 секунды (альтернативный метод)
-    setInterval(checkFormSubmission, 2000);
-    
-    // Слушаем сообщения от Яндекс Формы
-    window.addEventListener('message', function(event) {
-        if (event.origin !== 'https://forms.yandex.ru') return;
-        
-        // Если форма успешно отправлена, Яндекс отправляет сообщение
-        if (event.data && (event.data.type === 'form-submit-success' || event.data.success)) {
-            showModal();
-        }
-    });
     
     // ========== ОБРАБОТКА ВЫБОРА ПВЗ ==========
     document.addEventListener('YaNddWidgetPointSelected', function (data) {
