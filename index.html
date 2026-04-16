@@ -410,21 +410,14 @@
     // ========== НАСТРОЙКИ ==========
     const TELEGRAM_BOT_TOKEN = '8552202930:AAEmYfkHIjCGUrRvdMbZ5wgzvsVdbHwmQoQ';
     const TELEGRAM_CHAT_ID = '71286277';
-    const EMAIL_TO = 'stom-tochka@mail.ru';
     
     // ========== МАСКА ДЛЯ ТЕЛЕФОНА ==========
     const phoneInput = document.getElementById('phone');
-    let phoneMask = null;
-    
-    try {
-        phoneMask = IMask(phoneInput, {
-            mask: '+{7} (000) 000-00-00',
-            lazy: false,
-            placeholderChar: '_'
-        });
-    } catch(e) {
-        console.log('Маска не загрузилась');
-    }
+    const phoneMask = IMask(phoneInput, {
+        mask: '+{7} (000) 000-00-00',
+        lazy: false,
+        placeholderChar: '_'
+    });
     
     // ========== ЗАЩИТА ОТ ПОВТОРНЫХ ОТПРАВОК ==========
     const STORAGE_KEY = 'hasSubmittedBefore';
@@ -537,40 +530,18 @@
         }
     });
     
-    function showMessage(text, type = 'success') {
+    function showMessage(text, isError = false) {
         statusMessage.textContent = text;
-        statusMessage.className = 'status-message ' + type;
+        statusMessage.className = 'status-message ' + (isError ? 'error' : 'success');
         setTimeout(() => {
             statusMessage.className = 'status-message';
-        }, 8000);
+        }, 5000);
     }
     
-    // ========== ОТПРАВКА НА ПОЧТУ ЧЕРЕЗ СЕРВИС ФОРМЫ ==========
-    async function sendToEmail(fio, phone, email, address) {
-        // Используем сервис FormSubmit.co (бесплатно, не требует регистрации)
-        const formData = new FormData();
-        formData.append('name', fio);
-        formData.append('phone', phone);
-        formData.append('email', email);
-        formData.append('address', address);
-        formData.append('_subject', '📦 НОВАЯ ЗАЯВКА С САЙТА ПВЗ');
-        formData.append('_to', EMAIL_TO);
-        formData.append('_captcha', 'false'); // отключаем капчу для упрощения
-        
-        try {
-            const response = await fetch('https://formsubmit.co/ajax/stom-tochka@mail.ru', {
-                method: 'POST',
-                body: formData
-            });
-            return response.ok;
-        } catch (error) {
-            console.error('Ошибка отправки на почту:', error);
-            return false;
-        }
-    }
-    
-    // ========== ОТПРАВКА В TELEGRAM ==========
     async function sendToTelegram(fio, phone, email, address) {
+        // Убираем маску, оставляем только цифры для отправки (но можно и с маской)
+        const cleanPhone = phone.replace(/[^\d+]/g, '');
+        
         const message = `📦 *НОВАЯ ЗАЯВКА С САЙТА!*
         
 👤 *ФИО:* ${fio}
@@ -581,38 +552,27 @@
         
         const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
         
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        });
         
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    chat_id: TELEGRAM_CHAT_ID,
-                    text: message,
-                    parse_mode: 'Markdown'
-                }),
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            return response.ok;
-        } catch (error) {
-            clearTimeout(timeoutId);
-            console.error('Ошибка отправки в Telegram:', error);
-            return false;
-        }
+        return response.ok;
     }
     
-    // ========== ОСНОВНАЯ ФУНКЦИЯ ОТПРАВКИ ==========
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
         // Проверка на повторную отправку
         if (hasUserSubmittedBefore()) {
-            showMessage('❌ Вы уже отправляли заявку. Повторная отправка невозможна.', 'error');
+            showMessage('❌ Вы уже отправляли заявку. Повторная отправка невозможна.', true);
             return;
         }
         
@@ -621,7 +581,7 @@
         const now = Date.now();
         if (lastTime && (now - lastTime) < SUBMIT_COOLDOWN) {
             const secondsLeft = Math.ceil((SUBMIT_COOLDOWN - (now - lastTime)) / 1000);
-            showMessage(`❌ Пожалуйста, подождите ${secondsLeft} секунд перед повторной отправкой.`, 'error');
+            showMessage(`❌ Пожалуйста, подождите ${secondsLeft} секунд перед повторной отправкой.`, true);
             return;
         }
         
@@ -630,53 +590,48 @@
         const email = document.getElementById('email').value.trim();
         
         if (!fio || !phone || !email) {
-            showMessage('❌ Пожалуйста, заполните все поля!', 'error');
+            showMessage('❌ Пожалуйста, заполните все поля!', true);
             return;
         }
         
-        // Проверка, что телефон введён полностью
+        // Проверка, что телефон введён полностью (маска должна быть заполнена)
         if (phone.includes('_')) {
-            showMessage('❌ Пожалуйста, введите номер телефона полностью!', 'error');
+            showMessage('❌ Пожалуйста, введите номер телефона полностью!', true);
             return;
         }
         
         if (!selectedAddress) {
-            showMessage('❌ Пожалуйста, выберите пункт выдачи на карте!', 'error');
+            showMessage('❌ Пожалуйста, выберите пункт выдачи на карте!', true);
             return;
         }
         
         if (!consentCheckbox.checked) {
-            showMessage('❌ Пожалуйста, дайте согласие на обработку персональных данных!', 'error');
+            showMessage('❌ Пожалуйста, дайте согласие на обработку персональных данных!', true);
             return;
         }
         
         submitBtn.disabled = true;
         submitBtn.textContent = 'Отправка...';
         
-        // Отправляем параллельно в Telegram и на почту
-        const [telegramResult, emailResult] = await Promise.all([
-            sendToTelegram(fio, phone, email, selectedAddress),
-            sendToEmail(fio, phone, email, selectedAddress)
-        ]);
-        
-        if (telegramResult || emailResult) {
-            setSubmitted();
-            let successMessage = '✅ Спасибо! Заявка отправлена. ';
-            if (telegramResult && emailResult) {
-                successMessage += 'Уведомление получено в Telegram и на почту.';
-            } else if (telegramResult) {
-                successMessage += 'Уведомление отправлено в Telegram.';
-            } else if (emailResult) {
-                successMessage += 'Уведомление отправлено на почту.';
+        try {
+            const success = await sendToTelegram(fio, phone, email, selectedAddress);
+            
+            if (success) {
+                setSubmitted();
+                showMessage('✅ Спасибо! Заявка отправлена. Мы свяжемся с вами в ближайшее время.');
+                form.reset();
+                phoneMask.updateValue();
+                consentCheckbox.checked = false;
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Заявка отправлена';
+            } else {
+                showMessage('❌ Ошибка отправки. Попробуйте позже.', true);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Отправить заявку';
             }
-            showMessage(successMessage, 'success');
-            form.reset();
-            if (phoneMask) phoneMask.updateValue();
-            consentCheckbox.checked = false;
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Заявка отправлена';
-        } else {
-            showMessage('❌ Ошибка отправки. Попробуйте позже или свяжитесь с нами напрямую в Telegram.', 'error');
+        } catch (error) {
+            console.error('Ошибка:', error);
+            showMessage('❌ Ошибка соединения. Проверьте интернет.', true);
             submitBtn.disabled = false;
             submitBtn.textContent = 'Отправить заявку';
         }
