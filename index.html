@@ -76,7 +76,6 @@
             overflow-x: hidden;
         }
 
-        /* ========== ФИКС ДЛЯ ВИДЖЕТА ========== */
         #delivery-widget {
             width: 100%;
             min-height: 450px;
@@ -330,7 +329,6 @@
             animation: fadeInUp 0.6s ease;
         }
 
-        /* ========== МОБИЛЬНАЯ ВЕРСИЯ ========== */
         @media (max-width: 768px) {
             body {
                 padding: 12px;
@@ -371,7 +369,6 @@
             }
         }
         
-        /* Для очень маленьких экранов */
         @media (max-width: 480px) {
             .widget-header {
                 padding: 20px;
@@ -468,16 +465,28 @@
 
 <script async src="https://ndd-widget.landpro.site/widget.js"></script>
 
+<!-- Подключаем маску для телефона (IMask) -->
+<script src="https://unpkg.com/imask"></script>
+
 <script>
     // ========== ВАШИ ДАННЫЕ ==========
     const TELEGRAM_BOT_TOKEN = '8552202930:AAEmYfkHIjCGUrRvdMbZ5wgzvsVdbHwmQoQ';
     const TELEGRAM_CHAT_ID = '71286277';
     
+    // ========== МАСКА ДЛЯ ТЕЛЕФОНА ==========
+    const phoneInput = document.getElementById('phone');
+    if (phoneInput) {
+        const mask = IMask(phoneInput, {
+            mask: '+{7} (000) 000-00-00',
+            lazy: false,
+            placeholderChar: '_'
+        });
+    }
+    
     // ========== ФИКС ДЛЯ МОБИЛЬНОЙ ВЕРСИИ (ОБНОВЛЕНИЕ ВЫСОТЫ ВИДЖЕТА) ==========
     function fixMobileWidgetHeight() {
         const widgetContainer = document.getElementById('delivery-widget');
         if (widgetContainer) {
-            // Принудительно пересчитываем высоту
             const currentHeight = widgetContainer.scrollHeight;
             if (currentHeight > 0) {
                 widgetContainer.style.minHeight = currentHeight + 'px';
@@ -488,7 +497,6 @@
         }
     }
     
-    // Запускаем фикс после загрузки
     window.addEventListener('load', function() {
         setTimeout(fixMobileWidgetHeight, 100);
         setTimeout(fixMobileWidgetHeight, 500);
@@ -498,7 +506,6 @@
         setTimeout(fixMobileWidgetHeight, 50);
     });
     
-    // Когда виджет Яндекса загрузится
     document.addEventListener('YaNddWidgetLoad', function() {
         setTimeout(fixMobileWidgetHeight, 200);
         setTimeout(fixMobileWidgetHeight, 1000);
@@ -656,6 +663,10 @@
                 form.reset();
                 consentCheckbox.checked = false;
                 submitBtn.disabled = true;
+                // Очищаем поле телефона через маску
+                if (phoneInput && phoneInput._imask) {
+                    phoneInput._imask.value = '';
+                }
             } else {
                 showMessage('❌ Ошибка отправки. Попробуйте позже.', true);
                 submitBtn.disabled = false;
@@ -669,10 +680,9 @@
         }
     });
     
-    // Временная заглушка для политики
     document.getElementById('privacyLink').addEventListener('click', function(e) {
         e.preventDefault();
-        alert('Я даю согласие на обработку моих персональных данных (ФИО, телефон, email, адрес ПВЗ) для целей оформления и доставки заказа. Данные передаются через Telegram API и не хранятся на сервере сайта.');
+        alert('Здесь будет ссылка на вашу Политику обработки персональных данных.');
     });
 </script>
 </body>
