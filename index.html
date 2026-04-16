@@ -331,6 +331,8 @@
             }
         }
     </style>
+    <!-- Подключаем библиотеку для маски телефона -->
+    <script src="https://cdn.jsdelivr.net/npm/imask@6.4.2/dist/imask.min.js"></script>
 </head>
 <body>
 
@@ -364,7 +366,7 @@
 
                 <div class="input-group">
                     <label for="phone">Телефон *</label>
-                    <input type="tel" id="phone" name="Телефон" placeholder="+7 (999) 123-45-67" required>
+                    <input type="tel" id="phone" name="Телефон" placeholder="+7 (999) 999-99-99" required>
                 </div>
 
                 <div class="input-group">
@@ -385,7 +387,7 @@
             </form>
 
             <div class="action-buttons">
-                <h3> Остались вопросы? Свяжитесь с нами </h3>
+                <h3>✨ Остались вопросы? Свяжитесь с нами ✨</h3>
                 <div class="buttons-group">
                     <a href="https://t.me/stom_tochka" target="_blank" class="action-btn telegram">
                         📱 Написать в Telegram
@@ -408,6 +410,20 @@
     // ========== НАСТРОЙКИ ==========
     const TELEGRAM_BOT_TOKEN = '8552202930:AAEmYfkHIjCGUrRvdMbZ5wgzvsVdbHwmQoQ';
     const TELEGRAM_CHAT_ID = '71286277';
+    
+    // ========== МАСКА ДЛЯ ТЕЛЕФОНА ==========
+    const phoneInput = document.getElementById('phone');
+    let phoneMask = null;
+    
+    try {
+        phoneMask = IMask(phoneInput, {
+            mask: '+{7} (000) 000-00-00',
+            lazy: false,
+            placeholderChar: '_'
+        });
+    } catch(e) {
+        console.log('Маска не загрузилась');
+    }
     
     // ========== ЗАЩИТА ОТ ПОВТОРНЫХ ОТПРАВОК ==========
     const STORAGE_KEY = 'hasSubmittedBefore';
@@ -539,19 +555,24 @@
         
         const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
         
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                chat_id: TELEGRAM_CHAT_ID,
-                text: message,
-                parse_mode: 'Markdown'
-            })
-        });
-        
-        return response.ok;
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            });
+            
+            return response.ok;
+        } catch (error) {
+            console.error('Ошибка отправки в Telegram:', error);
+            return false;
+        }
     }
     
     form.addEventListener('submit', async function(e) {
@@ -581,6 +602,12 @@
             return;
         }
         
+        // Проверка, что телефон введён полностью (маска не должна содержать символы _)
+        if (phone.includes('_')) {
+            showMessage('❌ Пожалуйста, введите номер телефона полностью!', true);
+            return;
+        }
+        
         if (!selectedAddress) {
             showMessage('❌ Пожалуйста, выберите пункт выдачи на карте!', true);
             return;
@@ -601,6 +628,8 @@
                 setSubmitted();
                 showMessage('✅ Спасибо! Заявка отправлена. Мы свяжемся с вами в ближайшее время.');
                 form.reset();
+                // Очищаем маску телефона
+                if (phoneMask) phoneMask.updateValue();
                 consentCheckbox.checked = false;
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Заявка отправлена';
@@ -617,7 +646,7 @@
         }
     });
     
-    // Временная заглушка для политики
+    // Политика обработки данных
     document.getElementById('privacyLink').addEventListener('click', function(e) {
         e.preventDefault();
         alert('Вы даете согласие на обработку моих персональных данных (Ф.И.О., телефон, email, адрес ПВЗ) для целей оформления и доставки заказа. Данные передаются через Telegram API и не хранятся на сервере сайта.');
