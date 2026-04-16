@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Выбор ПВЗ и оформление заказа</title>
+    <!-- Подключаем библиотеку для маски телефона -->
+    <script src="https://cdn.jsdelivr.net/npm/imask"></script>
     <style>
         * {
             margin: 0;
@@ -126,15 +128,172 @@
             font-weight: 500;
         }
 
-        .yandex-form-container {
+        .custom-form {
             margin-top: 10px;
-            border-radius: 20px;
-            overflow: hidden;
         }
-        
-        .yandex-form-container iframe {
+
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a2c3e;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            padding: 14px 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 16px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .checkbox-group {
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .checkbox-group input {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .checkbox-group label {
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.4;
+            cursor: pointer;
+        }
+
+        .checkbox-group a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .checkbox-group a:hover {
+            text-decoration: underline;
+        }
+
+        .submit-btn {
             width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border: none;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+            font-family: inherit;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: scale(0.98);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .action-buttons {
+            margin-top: 30px;
+            padding: 25px 35px;
+            background: linear-gradient(135deg, #f8f9fc 0%, #f0f2f8 100%);
+            border-radius: 24px;
+            text-align: center;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .action-buttons h3 {
+            color: #1a2c3e;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .buttons-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            border-radius: 60px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .action-btn.telegram {
+            background: #0088cc;
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3);
+        }
+
+        .action-btn.telegram:hover {
+            background: #006699;
+            transform: translateY(-2px);
+        }
+
+        .action-btn.shop {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .action-btn.shop:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 16px;
+            text-align: center;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #e0f2e9;
+            color: #1e6f3f;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #fee2e2;
+            color: #dc2626;
+            display: block;
         }
 
         .footer {
@@ -143,12 +302,6 @@
             padding: 20px;
             color: rgba(255, 255, 255, 0.7);
             font-size: 13px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #1a2c3e;
         }
 
         @keyframes fadeInUp {
@@ -176,6 +329,9 @@
             .widget-header h1 {
                 font-size: 24px;
             }
+            .action-buttons {
+                padding: 20px;
+            }
         }
     </style>
 </head>
@@ -184,8 +340,8 @@
 <div class="container">
     <div class="widget-card">
         <div class="widget-header">
-            <h1>📍 Выберите пункт выдачи для получения бесплатных пробных пинов </h1>
-            <h1> Доставка = 0 р. </h1>
+            <h1>📍 Выберите пункт выдачи для получения бесплатных пробных пинов</h1>
+            <h1>Доставка = 0 р.</h1>
         </div>
         <div class="widget-body">
             <div id="delivery-widget"></div>
@@ -203,9 +359,43 @@
                 <span id="selectedAddressDisplay"></span>
             </div>
 
-            <div id="yandexFormContainer" class="yandex-form-container">
-                <div class="loading">
-                    Загрузка формы...
+            <form id="orderForm" class="custom-form">
+                <div class="input-group">
+                    <label for="fio">ФИО *</label>
+                    <input type="text" id="fio" name="ФИО" placeholder="Иванов Иван Иванович" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="phone">Телефон *</label>
+                    <input type="tel" id="phone" name="Телефон" placeholder="+7 (___) ___-__-__" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="Email" placeholder="client@example.com" required>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="consentCheckbox" required>
+                    <label for="consentCheckbox">
+                        Я принимаю условия <a href="#" id="privacyLink">Политики обработки персональных данных</a> и даю согласие на обработку моих персональных данных
+                    </label>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn" disabled>Отправить заявку</button>
+                
+                <div id="statusMessage" class="status-message"></div>
+            </form>
+
+            <div class="action-buttons">
+                <h3>✨ Остались вопросы? Свяжитесь с нами ✨</h3>
+                <div class="buttons-group">
+                    <a href="https://t.me/stom_tochka" target="_blank" class="action-btn telegram">
+                        📱 Написать в Telegram
+                    </a>
+                    <a href="https://checkout.tochka.com/stom-tochka" target="_blank" class="action-btn shop">
+                        🛍️ Перейти в магазин
+                    </a>
                 </div>
             </div>
         </div>
@@ -219,10 +409,10 @@
 
 <script>
     // ========== ВАШИ ДАННЫЕ ==========
-    const YANDEX_FORM_URL = 'https://forms.yandex.ru/u/69dfdfa4e010db47b08a5d5d/';
-    const ADDRESS_FIELD_ID = 'answer_short_text_9008975534367130';
+    const TELEGRAM_BOT_TOKEN = '8552202930:AAEmYfkHIjCGUrRvdMbZ5wgzvsVdbHwmQoQ';
+    const TELEGRAM_CHAT_ID = '71286277';
     
-    // ========== ИНИЦИАЛИЗАЦИЯ ВИДЖЕТА ==========
+    // ========== ИНИЦИАЛИЗАЦИЯ ВИДЖЕТА КАРТЫ ==========
     (function(w) {
         function startWidget() {
             w.YaDelivery.createWidget({
@@ -251,38 +441,18 @@
             ? startWidget()
             : document.addEventListener('YaNddWidgetLoad', startWidget);
     })(window);
-
-    // ========== ФУНКЦИЯ ЗАГРУЗКИ ФОРМЫ ==========
-    function loadYandexForm(address) {
-        const container = document.getElementById('yandexFormContainer');
-        if (!container) return;
-        
-        container.innerHTML = '';
-        
-        const iframe = document.createElement('iframe');
-        
-        let formUrl = YANDEX_FORM_URL;
-        if (address && address !== '') {
-            formUrl += `?${ADDRESS_FIELD_ID}=${encodeURIComponent(address)}`;
-        }
-        
-        iframe.src = formUrl;
-        iframe.setAttribute('frameborder', '0');
-        iframe.style.height = '650px';
-        iframe.style.width = '100%';
-        
-        container.appendChild(iframe);
-        
-        iframe.addEventListener('load', function() {
-            setTimeout(() => {
-                try {
-                    iframe.style.height = '700px';
-                } catch(e) {}
-            }, 500);
-        });
-    }
+    
+    // ========== НАСТРОЙКА МАСКИ ТЕЛЕФОНА ==========
+    const phoneInput = document.getElementById('phone');
+    const phoneMask = IMask(phoneInput, {
+        mask: '+{7} (000) 000-00-00',
+        lazy: false,  // Маска показывается сразу при фокусе
+        placeholderChar: '_'
+    });
     
     // ========== ОБРАБОТКА ВЫБОРА ПВЗ ==========
+    let selectedAddress = '';
+    
     function setAddressDisplay(address) {
         const displaySpan = document.getElementById('selectedAddressDisplay');
         const infoRow = document.getElementById('addressInfo');
@@ -291,6 +461,7 @@
             displaySpan.textContent = address;
             infoRow.style.display = 'flex';
         }
+        selectedAddress = address;
     }
 
     function scrollToForm(address) {
@@ -300,19 +471,16 @@
             formBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
             
             formBlock.style.transition = 'box-shadow 0.3s';
-            formBlock.style.boxShadow = '0 0 0 3px #667eea, 0 20px 35px -10px rgba(0,0,0,0.15)';
+            formBlock.style.boxShadow = '0 0 0 3px #667eea, 0 20px 35px -12px rgba(0,0,0,0.15)';
             setTimeout(function() {
                 formBlock.style.boxShadow = '';
             }, 1500);
-            
-            loadYandexForm(address);
             
             return true;
         }
         return false;
     }
     
-    // ========== ОБРАБОТКА ВЫБОРА ПВЗ ==========
     document.addEventListener('YaNddWidgetPointSelected', function (data) {
         if (data.detail && data.detail.address && data.detail.address.full_address) {
             const fullAddress = data.detail.address.full_address;
@@ -323,6 +491,109 @@
                 scrollToForm(fullAddress);
             }, 300);
         }
+    });
+    
+    // ========== ЛОГИКА ЧЕКБОКСА ==========
+    const consentCheckbox = document.getElementById('consentCheckbox');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    consentCheckbox.addEventListener('change', function() {
+        submitBtn.disabled = !this.checked;
+    });
+    
+    // ========== ОТПРАВКА ФОРМЫ В TELEGRAM ==========
+    const form = document.getElementById('orderForm');
+    const statusMessage = document.getElementById('statusMessage');
+    
+    function showMessage(text, isError = false) {
+        statusMessage.textContent = text;
+        statusMessage.className = 'status-message ' + (isError ? 'error' : 'success');
+        setTimeout(() => {
+            statusMessage.className = 'status-message';
+        }, 5000);
+    }
+    
+    async function sendToTelegram(fio, phone, email, address) {
+        // Убираем маску, оставляем только цифры для красивого отображения в уведомлении
+        const cleanPhone = phone.replace(/[^\d+]/g, '');
+        
+        const message = `📦 *НОВАЯ ЗАЯВКА С САЙТА!*
+        
+👤 *ФИО:* ${fio}
+📞 *Телефон:* ${cleanPhone}
+✉️ *Email:* ${email}
+📍 *ПВЗ:* ${address}
+🕐 *Время:* ${new Date().toLocaleString('ru-RU')}`;
+        
+        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                chat_id: TELEGRAM_CHAT_ID,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        });
+        
+        return response.ok;
+    }
+    
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const fio = document.getElementById('fio').value.trim();
+        const phone = phoneInput.value.trim();
+        const email = document.getElementById('email').value.trim();
+        
+        if (!fio || !phone || !email) {
+            showMessage('❌ Пожалуйста, заполните все поля!', true);
+            return;
+        }
+        
+        if (!selectedAddress) {
+            showMessage('❌ Пожалуйста, выберите пункт выдачи на карте!', true);
+            return;
+        }
+        
+        if (!consentCheckbox.checked) {
+            showMessage('❌ Пожалуйста, дайте согласие на обработку персональных данных!', true);
+            return;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Отправка...';
+        
+        try {
+            const success = await sendToTelegram(fio, phone, email, selectedAddress);
+            
+            if (success) {
+                showMessage('✅ Спасибо! Заявка отправлена. Мы свяжемся с вами в ближайшее время.');
+                form.reset();
+                phoneMask.updateValue();    // Сбрасываем маску телефона
+                consentCheckbox.checked = false;
+                submitBtn.disabled = true;
+            } else {
+                showMessage('❌ Ошибка отправки. Попробуйте позже.', true);
+                submitBtn.disabled = false;
+            }
+        } catch (error) {
+            console.error('Ошибка:', error);
+            showMessage('❌ Ошибка соединения. Проверьте интернет.', true);
+            submitBtn.disabled = false;
+        } finally {
+            submitBtn.textContent = 'Отправить заявку';
+        }
+    });
+    
+    // Временная заглушка для политики
+    document.getElementById('privacyLink').href = '#';
+    document.getElementById('privacyLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        alert('Я даю согласие на обработку моих персональных данных (ФИО, телефон, email, адрес ПВЗ) для целей оформления и доставки заказа. Данные передаются через Telegram API и не хранятся на сервере сайта.');
     });
 </script>
 </body>
