@@ -331,8 +331,6 @@
             }
         }
     </style>
-    <!-- Подключаем библиотеку для маски телефона -->
-    <script src="https://cdn.jsdelivr.net/npm/imask@6.4.2/dist/imask.min.js"></script>
 </head>
 <body>
 
@@ -366,7 +364,7 @@
 
                 <div class="input-group">
                     <label for="phone">Телефон *</label>
-                    <input type="tel" id="phone" name="Телефон" placeholder="+7 (999) 999-99-99" required>
+                    <input type="tel" id="phone" name="Телефон" placeholder="+7 (999) 123-45-67" required>
                 </div>
 
                 <div class="input-group">
@@ -410,14 +408,6 @@
     // ========== НАСТРОЙКИ ==========
     const TELEGRAM_BOT_TOKEN = '8552202930:AAEmYfkHIjCGUrRvdMbZ5wgzvsVdbHwmQoQ';
     const TELEGRAM_CHAT_ID = '71286277';
-    
-    // ========== МАСКА ДЛЯ ТЕЛЕФОНА ==========
-    const phoneInput = document.getElementById('phone');
-    const phoneMask = IMask(phoneInput, {
-        mask: '+{7} (000) 000-00-00',
-        lazy: false,
-        placeholderChar: '_'
-    });
     
     // ========== ЗАЩИТА ОТ ПОВТОРНЫХ ОТПРАВОК ==========
     const STORAGE_KEY = 'hasSubmittedBefore';
@@ -539,9 +529,6 @@
     }
     
     async function sendToTelegram(fio, phone, email, address) {
-        // Убираем маску, оставляем только цифры для отправки (но можно и с маской)
-        const cleanPhone = phone.replace(/[^\d+]/g, '');
-        
         const message = `📦 *НОВАЯ ЗАЯВКА С САЙТА!*
         
 👤 *ФИО:* ${fio}
@@ -594,12 +581,6 @@
             return;
         }
         
-        // Проверка, что телефон введён полностью (маска должна быть заполнена)
-        if (phone.includes('_')) {
-            showMessage('❌ Пожалуйста, введите номер телефона полностью!', true);
-            return;
-        }
-        
         if (!selectedAddress) {
             showMessage('❌ Пожалуйста, выберите пункт выдачи на карте!', true);
             return;
@@ -620,7 +601,6 @@
                 setSubmitted();
                 showMessage('✅ Спасибо! Заявка отправлена. Мы свяжемся с вами в ближайшее время.');
                 form.reset();
-                phoneMask.updateValue();
                 consentCheckbox.checked = false;
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Заявка отправлена';
@@ -640,8 +620,7 @@
     // Временная заглушка для политики
     document.getElementById('privacyLink').addEventListener('click', function(e) {
         e.preventDefault();
-        alert('Я даю согласие на обработку моих персональных данных (ФИО, телефон, email, адрес ПВЗ) для целей оформления и доставки заказа. Данные передаются через Telegram API и не хранятся на сервере сайта.
-');
+        alert('Вы даете согласие на обработку моих персональных данных (ФИО, телефон, email, адрес ПВЗ) для целей оформления и доставки заказа. Данные передаются через Telegram API и не хранятся на сервере сайта.');
     });
 </script>
 </body>
