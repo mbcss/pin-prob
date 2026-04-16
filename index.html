@@ -531,7 +531,7 @@
     
     // ========== ОТПРАВКА НА ПОЧТУ ЧЕРЕЗ BEGET ==========
     async function sendToEmail(fio, phone, email, address, ip) {
-        const response = await fetch('https://j925910l.beget.com/sendmail.php', {
+        const response = await fetch('https://j925910l.beget.tech/sendmail.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ fio, phone, email, address, ip })
